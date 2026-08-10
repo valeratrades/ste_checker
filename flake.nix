@@ -27,7 +27,7 @@
           build = {
             deny = false;
             workspace = let deprecate_by = "v1.0.0"; in {
-              "./ste_checker/" = [ "git_version" "log_directives" { deprecate = { by_version = deprecate_by; force = true; }; } ];
+              "./ste_checker/" = [ "git_version" { deprecate = { by_version = deprecate_by; force = true; }; } ];
             };
           };
         };
@@ -36,6 +36,11 @@
           enable = true;
           lastSupportedVersion = "nightly-2026-08-09";
           jobs.default = true;
+          release = {
+            cargoTomlPath = "ste_checker/Cargo.toml";
+            hooks = { push.branches = [ "main" ]; };
+            gate = "\"$(git show HEAD~1:ste_checker/Cargo.toml | grep '^version' | head -1)\" != \"$(grep '^version' ste_checker/Cargo.toml | head -1)\"";
+          };
         };
         readme = v_flakes.readme-fw {
           inherit pkgs pname;

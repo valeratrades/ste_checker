@@ -2,6 +2,19 @@
 name = "ste_checker"
 version = "0.1.0"
 edition = "2024"
+description = "Procedural ASD-STE100 (Simplified Technical English) checker for Markdown"
+license = "BlueOak-1.0.0"
+repository = "https://github.com/valeratrades/ste_checker"
+readme = "../README.md"
+keywords = ["ste", "asd-ste100", "linter", "markdown", "documentation"]
+categories = ["command-line-utilities", "text-processing"]
+
+[package.metadata]
+
+[package.metadata.binstall]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-{ target }.tar.gz"
+bin-dir = "{ bin }{ binary-ext }"
+pkg-fmt = "tgz"
 
 [dependencies]
 clap.workspace = true
@@ -11,11 +24,6 @@ harper-core.workspace = true
 miette.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-v_utils.workspace = true
 
 [lints]
 workspace = true
-
-[[test]]
-name = "integration"
-path = "../tests/integration/main.rs"

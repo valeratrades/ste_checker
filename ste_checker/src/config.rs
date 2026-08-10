@@ -1,23 +1,17 @@
-use serde::{Deserialize, Serialize};
-use v_utils::macros as v_macros;
-
-#[derive(Clone, Debug, Default, v_macros::MyConfigPrimitives, v_macros::Settings)]
+#[derive(Clone, Debug, Default)]
 pub struct AppConfig {
-	#[serde(default)]
 	pub text_type: TextType,
 	/// Rule names to switch off entirely; `--help` lists them.
-	#[serde(default)]
 	pub disable: Vec<String>,
 }
 
 /// ASD-STE100 allows longer sentences in descriptive text than in procedures.
-#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
-#[serde(rename_all = "lowercase")]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, clap::ValueEnum)]
 pub enum TextType {
 	#[default]
-	#[serde(alias = "procedural")]
+	#[value(alias = "procedural")]
 	Procedure,
-	#[serde(alias = "descriptive")]
+	#[value(alias = "descriptive")]
 	Description,
 }
 

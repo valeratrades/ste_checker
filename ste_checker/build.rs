@@ -3,7 +3,6 @@ const DEPRECATE_FORCE: bool = true;
 
 fn main() {
 	git_version();
-	log_directives();
 	deprecate();
 }
 
@@ -20,17 +19,6 @@ fn git_version() {
 		.map(|s| s.trim().to_string())
 		.unwrap_or_else(|| "unknown".to_string());
 	println!("cargo:rustc-env=GIT_HASH={git_hash}");
-}
-
-fn log_directives() {
-	// Embed log directives if .cargo/log_directives exists
-	println!("cargo:rerun-if-changed=.cargo/log_directives");
-	if let Ok(directives) = std::fs::read_to_string(".cargo/log_directives") {
-		let directives = directives.trim();
-		if !directives.is_empty() {
-			println!("cargo:rustc-env=LOG_DIRECTIVES={directives}");
-		}
-	}
 }
 
 fn deprecate() {

@@ -1,0 +1,15 @@
+[package]
+name = "ste_checker"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clap.workspace = true
+color-eyre.workspace = true
+derive-new.workspace = true
+miette.workspace = true
+ste_checker_macros = { workspace = true }
+v_utils.workspace = true
+
+[lints]
+workspace = true

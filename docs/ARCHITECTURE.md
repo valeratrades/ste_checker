@@ -27,6 +27,8 @@ flowchart TD
     OUT --> REP
 ```
 
+Where this is going, and the measured gaps that decide the order: [ROADMAP.md](./ROADMAP.md).
+
 ## Bird's eye view
 
 ASD-STE100 restricts English to one meaning per word, one part of speech per word, short

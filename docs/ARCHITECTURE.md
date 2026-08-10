@@ -79,7 +79,7 @@ lands on a character boundary.
 - **The glossary is part of the design, not a workaround.** ASD-STE100 provides for a
   per-project list of Technical Names and Technical Verbs. Without one, a software repo's own
   vocabulary buries every real finding.
-- **The corpus counts in `tests/integration/main.rs` are a snapshot, not a target.** They
+- **The corpus counts in `ste_checker/tests/integration/main.rs` are a snapshot, not a target.** They
   exist so that a change to the wordset, the equivalence table or a rule moves a visible
   number. Do not adjust a rule to make them go down.
 

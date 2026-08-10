@@ -1,6 +1,6 @@
 # Roadmap
 
-Baseline for everything below, over `tests/corpus/` (29 README assets, 680 tagged words):
+Baseline for everything below, over `ste_checker/tests/corpus/` (29 README assets, 680 tagged words):
 
 ```
                           no glossary    + starter glossary
@@ -22,7 +22,7 @@ negatives — no rule can see them.
 
 LanguageTool + TechScribe report P=0.86 / R=0.98. That is the number to chase.
 
-## 0. Steal from LanguageTool — before anything ships downstream
+## 0. Steal from LanguageTool
 
 Twenty years of production linguistics on us. Building ours first was to have concrete code to
 diff against theirs. Read LT's English resources and the TechScribe STE customization side by
@@ -55,15 +55,23 @@ side with `src/rules/` and `src/wordset.rs`, then write a plan from what they do
 Success measure: re-run the corpus calibration and show precision/recall movement against the
 baseline above.
 
-## 1. `readme_fw` integration
+## 1. `readme_fw` integration — shipped in v_flakes v1.6.80
 
-**Not a pre-commit hook.** `pre-commit` shows a hook's output only when the hook fails, so a
-warning-severity hook prints nothing — the one thing it exists to do. Nix runs the check and
-prints the warnings itself, over `docs/.readme_assets/{usage,install*}.{md,typ}`.
+`v_flakes.readme-fw`'s `shellHook` binstalls this crate from crates.io and runs it over
+`docs/.readme_assets/{usage,install*}.md` on every dev shell entry, right after it writes
+`README.md` from those same assets. Findings go to stderr; the exit code is ignored, so nothing
+gates. Every `readme_fw` consumer gets it — repos pick it up as they bump their `v_flakes` pin.
 
-Still to settle: **`v_utils`' `Settings` derive prints `warning: no config file found` to stderr
-on every invocation**, deliberately and unconditionally. Ship a config, pass `--config`, or drop
-the derive.
+Two things changed shape against the original plan:
+
+- **Not a pre-commit hook.** `pre-commit` shows a hook's output only when the hook fails, so a
+  warning-severity hook prints nothing — the one thing it exists to do. Nix prints the findings
+  itself instead.
+- **Config moved out of the config file.** `v_utils`' `Settings` derive prints `warning: no config
+  file found` to stderr unconditionally and by design, which every consumer's shell entry would
+  have carried. `v_utils` is gone; `text_type` and `disable` are plain clap flags that nix passes.
+
+`.sh` assets are skipped — shell scripts are not prose. `.typ` waits on item 3.
 
 ## 2. LLM target
 
@@ -80,8 +88,8 @@ list-for-sequences, topic sentences.
 ## 4. `--suggest-glossary`
 
 Emit the surviving wrong-pos and unapproved hits as a starter glossary instead of hand-writing one
-per repo. `tests/corpus.glossary` took a human pass to keep honest — 23 words that name software
-artifacts, against 29 surviving findings that are ordinary prose STE genuinely rejects (`need`,
+per repo. `ste_checker/tests/corpus.glossary` took a human pass to keep honest — 23 words that
+name software artifacts, against 29 surviving findings that are ordinary prose STE rejects (`need`,
 `via`, `just`, `instead`, `normally`, `per`, `under`). A machine can propose the list; it cannot
 draw that line.
 

@@ -60,13 +60,10 @@
               inherit pname;
               version = manifest.version;
 
-              buildInputs = with pkgs; [
-                openssl.dev
-              ];
-              nativeBuildInputs = with pkgs; [ pkg-config ];
-
               cargoLock.lockFile = ./Cargo.lock;
               src = pkgs.lib.cleanSource ./.;
+
+              RUSTC_WRAPPER = ""; # .cargo/config.toml sets sccache, absent in sandbox
             };
           };
 
@@ -83,8 +80,6 @@
 
             packages = [
               mold
-              openssl
-              pkg-config
               rust
             ] ++ pre-commit-check.enabledPackages ++ combined.enabledPackages;
 

@@ -7,7 +7,59 @@
 [<img alt="ci errors" src="https://img.shields.io/github/actions/workflow/status/valeratrades/ste_checker/errors.yml?branch=main&style=for-the-badge&style=flat-square&label=errors&labelColor=420d09" height="20">](https://github.com/valeratrades/ste_checker/actions?query=branch%3Amain) <!--NB: Won't find it if repo is private-->
 [<img alt="ci warnings" src="https://img.shields.io/github/actions/workflow/status/valeratrades/ste_checker/warnings.yml?branch=main&style=for-the-badge&style=flat-square&label=warnings&labelColor=d16002" height="20">](https://github.com/valeratrades/ste_checker/actions?query=branch%3Amain) <!--NB: Won't find it if repo is private-->
 
+`ste_checker` reads Markdown. It reports the text that does not agree with ASD-STE100
+(Simplified Technical English).
 
+These are the rules that a program can apply: the approved wordlist, the part of speech
+of each word, the length of each sentence, noun clusters, the passive voice, compound
+tenses, -ing forms and contractions.
+
+The standard has 53 rules. This program has 10 of them. A reader who understands the
+text must apply the other 43. ASD and STEMG do not endorse this program, and it
+certifies nothing. Use it as an aid, not as a gate.
+
+A word can be approved in one part of speech and not in another. *Work* is an approved
+noun and an unapproved verb. `ste_checker` tags each word before it reads the wordlist.
+Thus "Do not work the lever" is a finding, but "The work is done" is not.
+<!-- markdownlint-disable -->
+<details>
+<summary>
+<h2>Installation</h2>
+</summary>
+
+```sh
+nix run github:valeratrades/ste_checker -- --help
+```
+
+</details>
+<!-- markdownlint-restore -->
+
+## Usage
+Give all the files to one process. The language model loads one time, then each file
+costs approximately 100 microseconds.
+
+```sh
+ste_checker docs/.readme_assets/usage.md docs/.readme_assets/installation.md
+```
+
+Findings are warnings, and the exit code is 0. To make them errors, add `--deny`. For
+a machine-readable report, add `--format json`.
+
+Your project has its own Technical Names and Technical Verbs, and ASD-STE100 tells you
+to write them down. Put one word on each line in `docs/.ste_glossary`, or give another
+path with `--glossary`. Words in the glossary are approved in each part of speech.
+
+Set `text_type` to `description` in the configuration file to permit 25 words in a
+sentence instead of 20. Put rule names in `disable` to switch rules off.
+
+### Attribution
+The wordlist in `ste_checker/vendor/openste.json` is [openSTE](https://github.com/openste/openste)
+v1.01, with the MIT license in `ste_checker/vendor/LICENSE-openste`. Part-of-speech tags, the
+Markdown parser and the sentence splitter come from [Harper](https://github.com/Automattic/harper),
+with the Apache-2.0 license.
+
+ASD-STE100 is a specification of the AeroSpace and Defence Industries Association of Europe. This
+project has no relation to ASD or to the STE Maintenance Group.
 
 
 <br>

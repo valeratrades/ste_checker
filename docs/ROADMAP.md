@@ -57,17 +57,13 @@ baseline above.
 
 ## 1. `readme_fw` integration
 
-Pre-commit hook over `docs/.readme_assets/{usage,install*}.{md,typ}`, `severity: warning`, wired
-at `v_flakes/flake.nix:91` alongside the existing `pre-commit-check`.
+**Not a pre-commit hook.** `pre-commit` shows a hook's output only when the hook fails, so a
+warning-severity hook prints nothing — the one thing it exists to do. Nix runs the check and
+prints the warnings itself, over `docs/.readme_assets/{usage,install*}.{md,typ}`.
 
-Two things to settle first:
-
-- **The exit code is 0 by design**, so `pre-commit` hides the output — and the findings with it.
-  A warning-severity hook that prints nothing is useless. Either the hook runs with `--deny` and
-  the framework downgrades the failure, or it always prints.
-- **`v_utils`' `Settings` derive prints `warning: no config file found` to stderr on every
-  invocation**, deliberately and unconditionally. On a commit hook that is noise on every commit.
-  Ship a config, pass `--config`, or drop the derive.
+Still to settle: **`v_utils`' `Settings` derive prints `warning: no config file found` to stderr
+on every invocation**, deliberately and unconditionally. Ship a config, pass `--config`, or drop
+the derive.
 
 ## 2. LLM target
 

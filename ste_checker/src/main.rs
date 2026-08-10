@@ -7,7 +7,7 @@ use clap::Parser;
 use color_eyre::eyre::{Result, WrapErr, bail};
 use ste_checker::{
 	Ctx,
-	config::{AppConfig, SettingsFlags},
+	config::{AppConfig, TextType},
 	report,
 };
 
@@ -39,8 +39,12 @@ struct Cli {
 	/// Approved project terms, one per line. Defaults to `docs/.ste_glossary` when present.
 	#[arg(long)]
 	glossary: Option<PathBuf>,
-	#[command(flatten)]
-	settings: SettingsFlags,
+	/// Descriptive text is allowed longer sentences than a procedure.
+	#[arg(long, value_enum, default_value_t = TextType::Procedure)]
+	text_type: TextType,
+	/// Rule names to switch off entirely.
+	#[arg(long)]
+	disable: Vec<String>,
 }
 
 #[derive(Clone, Copy, PartialEq, clap::ValueEnum)]
@@ -52,12 +56,15 @@ enum Format {
 fn main() -> Result<()> {
 	color_eyre::install()?;
 	let cli = Cli::parse();
-	let config = AppConfig::try_build(cli.settings).wrap_err("failed to read config")?;
-	for rule in &config.disable {
+	for rule in &cli.disable {
 		if !ste_checker::rule_names().any(|r| r == rule) {
 			bail!("`{rule}` is not a rule; known rules: {}", ste_checker::rule_names().collect::<Vec<_>>().join(", "));
 		}
 	}
+	let config = AppConfig {
+		text_type: cli.text_type,
+		disable: cli.disable,
+	};
 
 	let glossary = match &cli.glossary {
 		Some(path) => Ctx::read_glossary(path).wrap_err_with(|| format!("failed to read glossary {}", path.display()))?,

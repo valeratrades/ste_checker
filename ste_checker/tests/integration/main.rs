@@ -8,8 +8,8 @@ use std::{collections::HashSet, path::Path};
 
 use ste_checker::{Ctx, config::AppConfig};
 
-const CORPUS: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../tests/corpus");
-const GLOSSARY: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../tests/corpus.glossary");
+const CORPUS: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/corpus");
+const GLOSSARY: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/corpus.glossary");
 
 #[test]
 fn corpus_calibration() {

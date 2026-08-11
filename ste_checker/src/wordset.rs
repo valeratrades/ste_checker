@@ -54,14 +54,15 @@ impl Wordset {
 }
 
 /// STE's parts of speech are coarser than Universal Dependencies': modals count as verbs,
-/// possessives as adjectives, and it splits neither particles nor subordinators out.
-/// Without this the wrong-POS rule is 78% noise on real prose — see docs/ARCHITECTURE.md.
+/// possessives as adjectives, and it splits neither particles nor subordinators out. Each pair is
+/// a claim about the two tagsets, which is why `tags.rs` does not replace it — the cascade
+/// normalises the tag a rule sees, this maps the categories.
 pub fn equivalent(seen: UPOS, approved: UPOS) -> bool {
 	use UPOS::*;
 	seen == approved
 		|| matches!(
 			(seen, approved),
-			(AUX, VERB) | (PART, ADV) | (PART, ADP) | (PRON, ADJ) | (PRON, DET) | (DET, PRON) | (SCONJ, ADP) | (SCONJ, CCONJ) | (ADP, ADV) | (ADV, ADP) | (PROPN, NOUN)
+			(AUX, VERB) | (PART, ADV) | (PART, ADP) | (PRON, ADJ) | (PRON, DET) | (DET, PRON) | (SCONJ, ADP) | (SCONJ, CCONJ) | (PROPN, NOUN)
 		)
 }
 

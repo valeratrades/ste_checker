@@ -4,15 +4,15 @@ use harper_core::{
 };
 
 use super::prose_words;
-use crate::ctx::Ctx;
+use crate::{ctx::Ctx, tags::Tags};
 
 /// `'s` is only a contraction after these; everywhere else it is a possessive.
 const PRONOUN_STEMS: &[&str] = &["it", "he", "she", "that", "this", "there", "here", "what", "who", "let"];
 
-pub fn contraction(doc: &Document, _ctx: &Ctx) -> Vec<Lint> {
+pub fn contraction(doc: &Document, tags: &Tags, _ctx: &Ctx) -> Vec<Lint> {
 	let src = doc.get_source();
-	prose_words(doc)
-		.filter_map(|t| {
+	prose_words(doc, tags)
+		.filter_map(|(_, t)| {
 			let word = t.get_str(src);
 			let (stem, suffix) = word.split_once(['\'', '\u{2019}'])?;
 			let contracted = match suffix.to_lowercase().as_str() {

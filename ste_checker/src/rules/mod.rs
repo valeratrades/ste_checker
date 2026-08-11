@@ -1,7 +1,6 @@
-use harper_brill::UPOS;
-use harper_core::{Document, Span, Token, TokenStringExt, linting::Lint};
+use harper_core::{Document, Token, linting::Lint};
 
-use crate::ctx::Ctx;
+use crate::{ctx::Ctx, tags::Tags};
 
 pub mod contraction;
 pub mod dictionary;
@@ -9,7 +8,7 @@ pub mod noun_cluster;
 pub mod sentence;
 pub mod verb_form;
 
-pub type Rule = fn(&Document, &Ctx) -> Vec<Lint>;
+pub type Rule = fn(&Document, &Tags, &Ctx) -> Vec<Lint>;
 
 pub const RULES: &[(&str, Rule)] = &[
 	("unapproved-word", dictionary::unapproved_word),
@@ -22,20 +21,8 @@ pub const RULES: &[(&str, Rule)] = &[
 	("contraction", contraction::contraction),
 ];
 
-/// Section titles are not sentences, and in the README case `readme_fw` generates them.
-pub(crate) fn heading_spans(doc: &Document) -> Vec<Span<char>> {
-	doc.iter_headings().filter_map(|h| h.span()).collect()
-}
-
-pub(crate) fn in_heading(headings: &[Span<char>], span: Span<char>) -> bool {
-	headings.iter().any(|h| h.contains(span.start))
-}
-
-pub(crate) fn prose_words(doc: &Document) -> impl Iterator<Item = &Token> {
-	let headings = heading_spans(doc);
-	doc.tokens().filter(move |t| t.kind.is_word() && !in_heading(&headings, t.span))
-}
-
-pub(crate) fn pos(t: &Token) -> Option<UPOS> {
-	t.kind.as_word().and_then(|m| m.as_ref()).and_then(|m| m.pos_tag)
+/// Word tokens outside headings, with their index into `doc.get_tokens()` — which is what
+/// [`Tags`] is keyed by.
+pub(crate) fn prose_words<'a>(doc: &'a Document, tags: &'a Tags) -> impl Iterator<Item = (usize, &'a Token)> {
+	doc.get_tokens().iter().enumerate().filter(move |(_, t)| t.kind.is_word() && !tags.in_heading(t.span))
 }

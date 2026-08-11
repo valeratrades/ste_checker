@@ -8,6 +8,7 @@ pub mod config;
 pub mod ctx;
 pub mod report;
 mod rules;
+mod tags;
 pub mod wordset;
 
 pub use ctx::Ctx;
@@ -20,10 +21,11 @@ pub struct Finding {
 /// Char spans in `lint.span` index `text`, not the rendered markdown.
 pub fn check(text: &str, ctx: &Ctx) -> Vec<Finding> {
 	let doc = Document::new_markdown_default_curated(text);
+	let tags = tags::Tags::new(&doc);
 	let mut findings: Vec<Finding> = rules::RULES
 		.iter()
 		.filter(|(name, _)| ctx.rule_enabled(name))
-		.flat_map(|(name, rule)| rule(&doc, ctx).into_iter().map(move |lint| Finding { rule: name, lint }))
+		.flat_map(|(name, rule)| rule(&doc, &tags, ctx).into_iter().map(move |lint| Finding { rule: name, lint }))
 		.collect();
 	findings.sort_by_key(|f| (f.lint.span.start, f.lint.span.end, f.rule));
 	findings

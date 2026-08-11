@@ -3,19 +3,17 @@ use harper_core::{
 	linting::{Lint, LintKind},
 };
 
-use super::{heading_spans, in_heading};
-use crate::ctx::Ctx;
+use crate::{ctx::Ctx, tags::Tags};
 
 /// Table cells and list fragments each parse as their own one- or two-word "sentence".
 const MIN_WORDS: usize = 3;
 
-pub fn length(doc: &Document, ctx: &Ctx) -> Vec<Lint> {
-	let headings = heading_spans(doc);
+pub fn length(doc: &Document, tags: &Tags, ctx: &Ctx) -> Vec<Lint> {
 	let max = ctx.config.text_type.max_sentence_words();
 	doc.iter_sentences()
 		.filter_map(|s| {
 			let span = s.span()?;
-			if in_heading(&headings, span) {
+			if tags.in_heading(span) {
 				return None;
 			}
 			let words = s.iter().filter(|t| t.kind.is_word()).count();

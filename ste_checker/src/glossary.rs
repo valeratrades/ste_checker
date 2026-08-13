@@ -14,7 +14,7 @@ use crate::wordset::equivalent;
 
 /// Words to their definitions. Nothing reads a definition yet; it is documentation for the human
 /// and the slot `--suggest-glossary` leaves empty.
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct Glossary {
 	pub names: HashMap<String, Option<String>>,
 	pub verbs: HashMap<String, Option<String>>,

@@ -29,9 +29,23 @@ against the *blacklist* — they are words openSTE already had rows for. A gloss
 the whitelist is the ~90 entries `--suggest-glossary` proposes, and writing that list is the
 consumer's job, not this repo's.
 
+Measured over `ste_checker/tests/corpus.truth` — 155 hand-labelled spans across six of the 29
+files, under `corpus.glossary.nix`:
+
+```
+ precision 0.949 (149/157)      recall 0.961 (149/155)
+```
+
+The eight false positives are all tagger artifacts (`Flag`, `Default` and `Error` read as verbs,
+`use` in `macros use inline`, `manual fixing`, `Example config:`). The six misses are two
+hyphenated-compound halves the immunize rule silences, two 3rd-person forms whose base the
+lemmatizer cannot reach (`syncs`), and two passives with an adverb between the auxiliary and the
+participle. Both numbers are printed by the test and asserted against a floor of 0.90, not a
+target — a change that trades one for the other has to be visible rather than netting out.
+
 LanguageTool + TechScribe report P=0.86 / R=0.98. That is a direction, not a benchmark: it is an
-unpublished vendor number with no corpus or protocol behind it. `tests/corpus.truth` computes ours
-over a hand-labelled subset.
+unpublished vendor number with no corpus or protocol behind it, and it is over their corpus rather
+than ours.
 
 ## 0. Steal from LanguageTool — done
 
@@ -147,6 +161,11 @@ Three smaller decisions, each visible in a test:
   proposed itself while `messages` proposed `message`.
 
 `contraction` gained an immunize rule, or `won't` reports twice.
+
+**This repo had a `docs/.ste_glossary` after all** — the plan checked for consumers and missed the
+crate's own. It is now `docs/glossary.nix`, extended with the vocabulary of grammar (`noun`,
+`verb`, `wordlist`, `contraction`) that the standard's 900 words have no reason to carry and this
+program cannot describe itself without.
 
 **Blast radius.** 17 repos consume `readme_fw`, which runs this crate with no flags on every dev
 shell entry. Each sees roughly three times the findings until it has a `docs/glossary.nix`.

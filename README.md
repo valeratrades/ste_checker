@@ -45,9 +45,9 @@ ste_checker docs/.readme_assets/usage.md docs/.readme_assets/installation.md
 Findings are warnings, and the exit code is 0. To make them errors, add `--deny`. For
 a machine-readable report, add `--format json`.
 
-ASD-STE100 approves approximately 900 words, and it rejects every other word. Thus your
-project must declare its own Technical Names and Technical Verbs. Write them in
-`docs/glossary.nix`, or give another path with `--glossary`:
+ASD-STE100 has approximately 900 approved words. All other words are not approved. Thus
+each project must declare its Technical Names and Technical Verbs in `docs/glossary.nix`.
+Use `--glossary` for a different file.
 
 ```nix
 {
@@ -56,10 +56,10 @@ project must declare its own Technical Names and Technical Verbs. Write them in
 }
 ```
 
-A name is approved as a noun and a verb is approved as a verb. To make the first file,
+A name is approved as a noun, and a verb is approved as a verb. For the initial file,
 run `ste_checker --suggest-glossary` on your Markdown. It writes each word that is not
-in the approved vocabulary. Delete each word that is ordinary English, and write a
-description for each word that you keep.
+in the approved vocabulary. Remove the words that are usual English, then write a
+description for the words that stay.
 
 Set `text_type` to `description` in the configuration file to permit 25 words in a
 sentence instead of 20. Put rule names in `disable` to switch rules off.

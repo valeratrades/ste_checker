@@ -16,12 +16,16 @@ pub(crate) struct Tags {
 impl Tags {
 	pub(crate) fn new(doc: &Document) -> Self {
 		let tokens = doc.get_tokens();
+		let src = doc.get_source();
 		let mut tags = Self {
 			pos: tokens.iter().map(|t| t.kind.as_word().and_then(|m| m.as_ref()).and_then(|m| m.pos_tag)).collect(),
-			immune: tokens.iter().enumerate().map(|(i, t)| t.kind.is_word() && hyphenated(tokens, i)).collect(),
+			immune: tokens
+				.iter()
+				.enumerate()
+				.map(|(i, t)| t.kind.is_word() && (hyphenated(tokens, i) || contracted(t, src)))
+				.collect(),
 			headings: doc.iter_headings().filter_map(|h| h.span()).collect(),
 		};
-		let src = doc.get_source();
 		let mut start = 0;
 		for end in tokens
 			.iter()
@@ -100,6 +104,12 @@ impl Tags {
 fn hyphenated(tokens: &[Token], i: usize) -> bool {
 	let hyphen = |t: Option<&Token>| matches!(t.map(|t| &t.kind), Some(TokenKind::Punctuation(Punctuation::Hyphen)));
 	hyphen(i.checked_sub(1).map(|p| &tokens[p])) || hyphen(tokens.get(i + 1))
+}
+
+/// A contraction. `contraction` already owns the span, and neither half of `won't` is a word the
+/// wordset has a row for.
+fn contracted(t: &Token, src: &[char]) -> bool {
+	t.get_str(src).contains(['\'', '\u{2019}'])
 }
 
 /// A past participle under a form of `be`. `passive-voice` already owns the span.

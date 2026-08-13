@@ -4,21 +4,22 @@
 //! at the time of writing — the text this checker was calibrated against. The counts below are a
 //! snapshot, not a target: any change to the wordset, the POS-equivalence table or a rule moves
 //! them, and that movement is the regression signal.
-use std::{collections::HashSet, path::Path};
+use std::path::Path;
 
-use ste_checker::{Ctx, config::AppConfig};
+use ste_checker::{Ctx, config::AppConfig, glossary::Glossary};
 
 const CORPUS: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/corpus");
-const GLOSSARY: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/corpus.glossary");
+const GLOSSARY: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/corpus.glossary.nix");
 
 #[test]
 fn corpus_calibration() {
-	let counts = corpus_counts(HashSet::new());
+	let counts = corpus_counts(Glossary::default());
 	assert_eq!(
 		counts,
 		vec![
 			("unapproved-word", 44),
 			("wrong-pos", 16),
+			("unknown-word", 150),
 			("sentence-length", 2),
 			("noun-cluster", 0),
 			("passive-voice", 5),
@@ -33,12 +34,13 @@ fn corpus_calibration() {
 /// ASD-STE100 debt in the corpus, so `--deny` still exits non-zero over it.
 #[test]
 fn glossary_absorbs_technical_vocabulary() {
-	let counts = corpus_counts(Ctx::read_glossary(Path::new(GLOSSARY)).unwrap());
+	let counts = corpus_counts(Glossary::read(Path::new(GLOSSARY)).unwrap());
 	assert_eq!(
 		counts,
 		vec![
-			("unapproved-word", 35),
-			("wrong-pos", 4),
+			("unapproved-word", 36),
+			("wrong-pos", 7),
+			("unknown-word", 147),
 			("sentence-length", 2),
 			("noun-cluster", 0),
 			("passive-voice", 5),
@@ -53,7 +55,7 @@ fn glossary_absorbs_technical_vocabulary() {
 /// the nominal phrase the cluster rule used to be counted over.
 #[test]
 fn noun_cluster_survives_a_mistagged_stack() {
-	let ctx = Ctx::new(AppConfig::default(), HashSet::new());
+	let ctx = Ctx::new(AppConfig::default(), Glossary::default());
 	let stack = "The main landing gear housing cover plate assembly bolt is loose.";
 	assert_eq!(flagged(stack, "noun-cluster", &ctx).len(), 1);
 	assert!(!flagged(stack, "unapproved-word", &ctx).contains(&"cover".to_string()));
@@ -64,7 +66,7 @@ fn noun_cluster_survives_a_mistagged_stack() {
 /// writing fault — the tagger and openSTE disagree about the tagset, not about the sentence.
 #[test]
 fn tagger_artifacts_are_not_wrong_pos() {
-	let ctx = Ctx::new(AppConfig::default(), HashSet::new());
+	let ctx = Ctx::new(AppConfig::default(), Glossary::default());
 	for text in [
 		"Standard logic that most providers share.",
 		"When used as a lib, import with the toml.",
@@ -82,7 +84,7 @@ fn tagger_artifacts_are_not_wrong_pos() {
 /// The tokenizer splits hyphenated compounds, and the halves are not words anyone wrote.
 #[test]
 fn hyphen_compounds_do_not_reach_the_dictionary_rules() {
-	let ctx = Ctx::new(AppConfig::default(), HashSet::new());
+	let ctx = Ctx::new(AppConfig::default(), Glossary::default());
 	assert_eq!(flagged("Argument-less pub fn new is the rule.", "wrong-pos", &ctx), Vec::<String>::new());
 	assert_eq!(flagged("Wrap impl blocks in vim 1-fold markers.", "wrong-pos", &ctx), Vec::<String>::new());
 	// The price of the rule: `well` is an unapproved adverb, and immunity cannot see that.
@@ -93,8 +95,8 @@ fn hyphen_compounds_do_not_reach_the_dictionary_rules() {
 /// `passive-voice` owns the span; the dictionary rules would only say the same thing again.
 #[test]
 fn passive_participle_is_reported_once() {
-	let ctx = Ctx::new(AppConfig::default(), HashSet::new());
-	let rules: Vec<&str> = ste_checker::check("Groups are specified by chat ID.", &ctx).iter().map(|f| f.rule).collect();
+	let ctx = Ctx::new(AppConfig::default(), Glossary::default());
+	let rules: Vec<&str> = ste_checker::check("Groups are specified by the user.", &ctx).iter().map(|f| f.rule).collect();
 	assert_eq!(rules, vec!["passive-voice"]);
 }
 
@@ -102,7 +104,7 @@ fn passive_participle_is_reported_once() {
 /// clause is finite.
 #[test]
 fn imperative_does_not_fire_on_a_finite_clause() {
-	let ctx = Ctx::new(AppConfig::default(), HashSet::new());
+	let ctx = Ctx::new(AppConfig::default(), Glossary::default());
 	assert_eq!(flagged("Complete the OAuth authentication flow.", "wrong-pos", &ctx), Vec::<String>::new());
 	assert_eq!(flagged("Complete documentation is required.", "wrong-pos", &ctx), vec!["Complete"]);
 }
@@ -111,12 +113,12 @@ fn imperative_does_not_fire_on_a_finite_clause() {
 /// of a real text.
 #[test]
 fn inflections_inherit_their_lemma_row() {
-	let ctx = Ctx::new(AppConfig::default(), HashSet::new());
+	let ctx = Ctx::new(AppConfig::default(), Glossary::default());
 	assert_eq!(flagged("The script requires a token.", "unapproved-word", &ctx), vec!["requires"]);
 	// `quicker` derives from `quick`, an unapproved adjective, and is used as one — only the form
 	// flags say it is a comparative rather than the row itself.
 	assert!(!flagged("The build is quicker now.", "unapproved-word", &ctx).contains(&"quicker".to_string()));
-	let glossed = Ctx::new(AppConfig::default(), HashSet::from(["require".to_string()]));
+	let glossed = Ctx::new(AppConfig::default(), verbs(&["require"]));
 	assert_eq!(flagged("The script requires a token.", "unapproved-word", &glossed), Vec::<String>::new());
 }
 
@@ -124,22 +126,141 @@ fn inflections_inherit_their_lemma_row() {
 /// spelling is approved in one part of speech and not in another.
 #[test]
 fn part_of_speech_decides_approval() {
-	let ctx = Ctx::new(AppConfig::default(), HashSet::new());
+	let ctx = Ctx::new(AppConfig::default(), Glossary::default());
 	let flagged = |text: &str| ste_checker::check(text, &ctx).iter().any(|f| f.rule == "unapproved-word");
 	assert!(flagged("Do not work the lever."));
 	assert!(!flagged("The work is done."));
 }
 
+/// ASD-STE100 is a whitelist. Control: `work` has a row, so it is vocabulary whichever part of
+/// speech it is used in.
+#[test]
+fn unknown_words_are_reported() {
+	let ctx = Ctx::new(AppConfig::default(), Glossary::default());
+	assert_eq!(flagged("The browser opens a socket.", "unknown-word", &ctx), vec!["browser"]);
+	assert_eq!(flagged("Do the work.", "unknown-word", &ctx), Vec::<String>::new());
+	assert_eq!(
+		flagged("The browser opens a socket.", "unknown-word", &Ctx::new(AppConfig::default(), names(&["browser"]))),
+		Vec::<String>::new()
+	);
+}
+
+/// openSTE carries exactly one row per word, and `work/VERB/unapproved` is how it says *work is
+/// fine as a noun*. Reading the absence of a matching row as absence of the word would flag it.
+#[test]
+fn a_row_in_another_part_of_speech_is_not_unknown() {
+	let ctx = Ctx::new(AppConfig::default(), Glossary::default());
+	assert_eq!(flagged("The work is done.", "unknown-word", &ctx), Vec::<String>::new());
+	assert_eq!(flagged("The report is a manual.", "unknown-word", &ctx), Vec::<String>::new());
+}
+
+/// The whitelist arm is only as good as the lemmatizer under it, and `derived_from` covers the
+/// regular affixes only. Every verb here has an approved lemma in openSTE.
+#[test]
+fn irregular_inflections_are_not_unknown() {
+	let ctx = Ctx::new(AppConfig::default(), Glossary::default());
+	for text in [
+		"The tool has the file.",
+		"The tool found the file.",
+		"The user broke it.",
+		"The user wrote the file.",
+		"We have chosen the option.",
+		"The men saw it.",
+	] {
+		assert_eq!(flagged(text, "unknown-word", &ctx), Vec::<String>::new(), "{text}");
+	}
+}
+
+/// A Technical Name is approved as a noun and nothing else. A flat glossary would mute the verb
+/// reading too, which is the reading STE rejects.
+#[test]
+fn a_technical_name_is_not_a_technical_verb() {
+	// openSTE approves `check` as a noun only, so the imperative is a `wrong-pos` the glossary
+	// answers — as a Technical Verb, and only as a Technical Verb.
+	assert_eq!(flagged("Check the output.", "wrong-pos", &Ctx::new(AppConfig::default(), Glossary::default())), vec!["Check"]);
+	assert_eq!(flagged("Check the output.", "wrong-pos", &Ctx::new(AppConfig::default(), names(&["check"]))), vec!["Check"]);
+	assert_eq!(
+		flagged("Check the output.", "wrong-pos", &Ctx::new(AppConfig::default(), verbs(&["check"]))),
+		Vec::<String>::new()
+	);
+}
+
+/// Neither half of `won't` is a word openSTE has a row for, so without the immunize rule the
+/// whitelist arm reports every contraction a second time.
+#[test]
+fn contractions_are_reported_once() {
+	let ctx = Ctx::new(AppConfig::default(), Glossary::default());
+	let rules: Vec<&str> = ste_checker::check("You can't do that.", &ctx).iter().map(|f| f.rule).collect();
+	assert_eq!(rules, vec!["contraction"]);
+}
+
 /// Harper counts characters; miette and editors count bytes.
 #[test]
 fn reported_offsets_index_bytes() {
-	let ctx = Ctx::new(AppConfig::default(), HashSet::new());
+	let ctx = Ctx::new(AppConfig::default(), Glossary::default());
 	let text = "Ünicode — do not work the lever.\n";
 	let findings = ste_checker::check(text, &ctx);
 	let reported = ste_checker::report::json("t.md", text, &findings);
 	let word = reported.iter().find(|f| f.rule == "unapproved-word").expect("`work` as a verb is unapproved");
 	assert_eq!(&text[word.start..word.end], "work");
 	assert!(ste_checker::report::human("t.md", text, &findings).is_some());
+}
+
+/// The three entry forms mean the same thing, and anything outside the data subset of Nix is an
+/// error rather than a partial parse.
+#[test]
+fn glossary_nix_round_trips() {
+	let parsed = Glossary::parse(
+		"# a comment\n{\n  names = [ \"server\"   { name = \"OAuth\"; }\n\t{ name = \"telegram\"; desc = \"the bot API\"; } ]; # trailing\n  verbs = [{name=\"parse\";}];\n}\n",
+	)
+	.unwrap();
+	assert_eq!(parsed.names.get("server"), Some(&None));
+	assert_eq!(parsed.names.get("oauth"), Some(&None));
+	assert_eq!(parsed.names.get("telegram"), Some(&Some("the bot API".to_string())));
+	assert_eq!(parsed.verbs.keys().collect::<Vec<_>>(), vec!["parse"]);
+
+	for rejected in [
+		"let x = 1; in { names = []; verbs = []; }",
+		"import ./other.nix",
+		"{ inputs }: { names = []; verbs = []; }",
+		"{ names = [ \"${x}\" ]; verbs = []; }",
+		"{ nouns = [ \"server\" ]; }",
+		"{ names = [ { desc = \"no name\"; } ]; }",
+		"{ names = [ \"unterminated ]; }",
+	] {
+		assert!(Glossary::parse(rejected).is_err(), "{rejected}");
+	}
+}
+
+/// The bootstrap loop: the first run in a repo with no glossary has to produce a file the next
+/// run can read.
+#[test]
+fn suggest_glossary_emits_parseable_nix() {
+	let out = std::process::Command::new(env!("CARGO_BIN_EXE_ste_checker"))
+		.arg("--suggest-glossary")
+		.args(std::fs::read_dir(CORPUS).unwrap().map(|e| e.unwrap().path()))
+		.output()
+		.unwrap();
+	assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
+	let skeleton = Glossary::parse(std::str::from_utf8(&out.stdout).unwrap()).unwrap();
+	assert!(skeleton.names.contains_key("browser") && skeleton.verbs.contains_key("forbid"));
+	assert_eq!(skeleton.names.get("browser"), Some(&Some(String::new())), "every entry leaves `desc` for the human");
+}
+
+/// A glossary of Technical Names only, for the tests that need one.
+fn names(words: &[&str]) -> Glossary {
+	Glossary {
+		names: words.iter().map(|w| (w.to_string(), None)).collect(),
+		..Default::default()
+	}
+}
+
+/// A glossary of Technical Verbs only, for the tests that need one.
+fn verbs(words: &[&str]) -> Glossary {
+	Glossary {
+		verbs: words.iter().map(|w| (w.to_string(), None)).collect(),
+		..Default::default()
+	}
 }
 
 /// The words `rule` fired on, in source order. Spans are char indices into `text`.
@@ -152,7 +273,7 @@ fn flagged(text: &str, rule: &str, ctx: &Ctx) -> Vec<String> {
 		.collect()
 }
 
-fn corpus_counts(glossary: HashSet<String>) -> Vec<(&'static str, usize)> {
+fn corpus_counts(glossary: Glossary) -> Vec<(&'static str, usize)> {
 	let ctx = Ctx::new(AppConfig::default(), glossary);
 	let mut paths: Vec<_> = std::fs::read_dir(CORPUS).unwrap().map(|e| e.unwrap().path()).collect();
 	paths.sort();

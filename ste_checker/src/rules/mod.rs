@@ -13,6 +13,7 @@ pub type Rule = fn(&Document, &Tags, &Ctx) -> Vec<Lint>;
 pub const RULES: &[(&str, Rule)] = &[
 	("unapproved-word", dictionary::unapproved_word),
 	("wrong-pos", dictionary::wrong_pos),
+	("unknown-word", dictionary::unknown_word),
 	("sentence-length", sentence::length),
 	("noun-cluster", noun_cluster::cluster),
 	("passive-voice", verb_form::passive),

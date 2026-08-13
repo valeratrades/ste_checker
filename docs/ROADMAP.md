@@ -1,13 +1,15 @@
 # Roadmap
 
-Baseline for everything below, over `ste_checker/tests/corpus/` (29 README assets, 680 tagged
-words), before and after item 0:
+Baseline over `ste_checker/tests/corpus/` (29 README assets, 680 tagged words), before and after
+item 5 — the inversion of the dictionary filter from a blacklist to the whitelist the standard
+actually specifies:
 
 ```
                           no glossary        + starter glossary
                           before   after     before   after
- unapproved-word            56       44        29       35
- wrong-pos                  24       16        11        4
+ unapproved-word            44       44        35       36
+ wrong-pos                  16       16         4        7
+ unknown-word                0      150         0      147
  ing-verb                    9        9         9        9
  passive-voice               5        5         5        5
  sentence-length             2        2         2        2
@@ -15,20 +17,21 @@ words), before and after item 0:
  noun-cluster                0        0         0        0
  compound-tense              0        0         0        0
                            ───      ───       ───      ───
-                            98       78        58       57
+                            78      228        57      208
 ```
 
-`unapproved-word` going *up* under the glossary is the point: the lemma fallback made twelve
-inflected forms visible (`requires`, `provides`, `discovers`, `discovered`, `fails`, `returning`,
-`fixing`, `filtering`, `needing`, `decided`, `styles`, `supports`) that no rule could see before,
-against six the immunize rules took away. `wrong-pos` falling
-from 11 to 4 is the disambiguator. All four survivors were read by hand: `Order and group
-dependencies` is a real STE finding, `manual fixing` is the deferred NOUN→ADJ case, and two are
-new single-instance cascade artifacts (`Example config:` from the imperative rule, `macros use
-inline` from the noun-run rule).
+`unknown-word` is the whole of the change. The other movement is the glossary splitting into
+`names` and `verbs`: `default`, `error` and `target` are declared as Technical Names, and their
+verb readings are no longer muted along with them.
+
+The starter glossary now buys back only 20 of 228 findings, because its 23 words were chosen
+against the *blacklist* — they are words openSTE already had rows for. A glossary written against
+the whitelist is the ~90 entries `--suggest-glossary` proposes, and writing that list is the
+consumer's job, not this repo's.
 
 LanguageTool + TechScribe report P=0.86 / R=0.98. That is a direction, not a benchmark: it is an
-unpublished vendor number with no corpus or protocol behind it.
+unpublished vendor number with no corpus or protocol behind it. `tests/corpus.truth` computes ours
+over a hand-labelled subset.
 
 ## 0. Steal from LanguageTool — done
 
@@ -105,13 +108,51 @@ list-for-sequences, topic sentences.
 
 `harper-typst` exists; Typst assets are currently unchecked.
 
-## 4. `--suggest-glossary`
+## 4. `--suggest-glossary` — shipped with item 5
 
-Emit the surviving wrong-pos and unapproved hits as a starter glossary instead of hand-writing one
-per repo. `ste_checker/tests/corpus.glossary` took a human pass to keep honest — 23 words that
-name software artifacts, against 35 surviving findings that are ordinary prose STE rejects (`need`,
-`via`, `just`, `instead`, `normally`, `per`, `under`). A machine can propose the list; it cannot
-draw that line.
+Every `unknown-word` finding, aggregated by lemma, split into `names`/`verbs` by how the word was
+tagged, ordered by frequency, annotated with the count and with whether the word also occurs
+inside code in the same input. Deliberately unfiltered: the in-code signal measured 0.6/0.6
+against a hand-drawn line, which is enough to order a list a human edits and not enough to
+pre-filter one. A machine can propose the list; it cannot draw that line.
+
+## 5. Invert the filter — done
+
+`rules/dictionary.rs` is one `verdict()` behind three arms, and the third, `unknown-word`, fires
+when neither the surface form nor the lemma has an openSTE row. `docs/glossary.nix` replaces the
+word-per-line `docs/.ste_glossary` (no repo had written one), holds `names` and `verbs`
+separately, and carries a `desc` the standard asks a Technical Name to have. Nothing reads `desc`
+yet.
+
+**One premise of the plan inverted on contact, and it is the interesting part.** Item 0 measured
+`IrregularVerbs`/`IrregularNouns` as worth 0 and the plan closed them permanently — a correct
+measurement of the *blacklist*, where an unresolved inflection simply finds no row and stays
+silent. Under the whitelist an unresolved inflection is a *finding*, and `has`, `found`, `broke`,
+`chosen`, `men` and `teeth` were all reported as out of vocabulary although their lemmas are
+approved. 37 of 155 first-cut findings, all of them ordinary English, which is the one thing this
+arm must never report. Both tables are now consulted, and what neither reaches (irregular past
+participles) is silenced by a general rule: `unknown-word` only speaks about a form it can reduce
+to a base.
+
+Three smaller decisions, each visible in a test:
+
+- **`wrong-pos` stays on the surface row.** Sharing `verdict()` briefly gave it the lemma
+  fallback, which turned every gerund (`monitoring`) into a `wrong-pos`. An inflection's part of
+  speech is its lemma's; a form flag that agrees with the row while the tagger does not is a
+  disagreement about the form, which `ing-verb` owns.
+- **The glossary matches ADJ for names.** `chat ID` tags `chat` as ADJ, and requiring a second
+  declaration for the attributive reading would make the valve useless. The pair is not in
+  `equivalent()`, which is about the tagsets rather than about position.
+- **Suggestions collapse inflections but not derivations.** `derived_from` is both, so `browser`
+  proposed itself while `messages` proposed `message`.
+
+`contraction` gained an immunize rule, or `won't` reports twice.
+
+**Blast radius.** 17 repos consume `readme_fw`, which runs this crate with no flags on every dev
+shell entry. Each sees roughly three times the findings until it has a `docs/glossary.nix`.
+Nothing gates — the exit code stays 0 — but the pin bump is a visible change across the fleet, and
+the `readme_fw` shellHook should learn to print `run ste_checker --suggest-glossary` when the file
+is absent. That is a `v_flakes` change, not one this repo can make.
 
 ## Not on the roadmap
 

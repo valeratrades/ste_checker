@@ -4,12 +4,13 @@
 //! at the time of writing — the text this checker was calibrated against. The counts below are a
 //! snapshot, not a target: any change to the wordset, the POS-equivalence table or a rule moves
 //! them, and that movement is the regression signal.
-use std::path::Path;
+use std::{collections::HashSet, path::Path};
 
 use ste_checker::{Ctx, config::AppConfig, glossary::Glossary};
 
 const CORPUS: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/corpus");
 const GLOSSARY: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/corpus.glossary.nix");
+const TRUTH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/corpus.truth");
 
 #[test]
 fn corpus_calibration() {
@@ -204,6 +205,48 @@ fn reported_offsets_index_bytes() {
 	let word = reported.iter().find(|f| f.rule == "unapproved-word").expect("`work` as a verb is unapproved");
 	assert_eq!(&text[word.start..word.end], "work");
 	assert!(ste_checker::report::human("t.md", text, &findings).is_some());
+}
+
+/// Both numbers, printed and floored rather than targeted. A change that trades one for the other
+/// has to be visible; netting out to the same total is the failure mode this replaces.
+#[test]
+fn precision_and_recall() {
+	let truth: HashSet<(String, usize, usize, String)> = std::fs::read_to_string(TRUTH)
+		.unwrap()
+		.lines()
+		.filter(|l| !l.starts_with('#') && !l.trim().is_empty())
+		.map(|l| {
+			let mut field = l.split('\t');
+			let mut next = || field.next().expect("four tab-separated fields per row").to_string();
+			(next(), next().parse().unwrap(), next().parse().unwrap(), next())
+		})
+		.collect();
+
+	let ctx = Ctx::new(AppConfig::default(), Glossary::read(Path::new(GLOSSARY)).unwrap());
+	let mut found = HashSet::new();
+	for file in truth.iter().map(|(f, ..)| f.clone()).collect::<HashSet<_>>() {
+		let text = std::fs::read_to_string(format!("{CORPUS}/{file}")).unwrap();
+		let findings = ste_checker::check(&text, &ctx);
+		found.extend(
+			ste_checker::report::json(&file, &text, &findings)
+				.into_iter()
+				.map(|f| (file.clone(), f.start, f.end, f.rule.to_string())),
+		);
+	}
+	// `tedi__usage.md` is entirely a code fence: it carries no rows, so it is invisible above and
+	// has to be checked for silence by name.
+	assert!(ste_checker::check(&std::fs::read_to_string(format!("{CORPUS}/tedi__usage.md")).unwrap(), &ctx).is_empty());
+
+	let hits = found.intersection(&truth).count();
+	let (precision, recall) = (hits as f64 / found.len() as f64, hits as f64 / truth.len() as f64);
+	println!("precision {precision:.3} ({hits}/{}), recall {recall:.3} ({hits}/{})", found.len(), truth.len());
+	for missed in truth.difference(&found) {
+		println!("  missed {missed:?}");
+	}
+	for spurious in found.difference(&truth) {
+		println!("  spurious {spurious:?}");
+	}
+	assert!(precision >= 0.90 && recall >= 0.90, "precision {precision:.3}, recall {recall:.3}");
 }
 
 /// The three entry forms mean the same thing, and anything outside the data subset of Nix is an

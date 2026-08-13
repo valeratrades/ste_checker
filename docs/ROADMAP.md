@@ -7,22 +7,23 @@ actually specifies:
 ```
                           no glossary        + starter glossary
                           before   after     before   after
- unapproved-word            44       44        35       36
+ unapproved-word            44       43        35       35
  wrong-pos                  16       16         4        7
  unknown-word                0      150         0      147
- ing-verb                    9        9         9        9
+ ing-verb                    9        6         9        6
  passive-voice               5        5         5        5
  sentence-length             2        2         2        2
  contraction                 2        2         2        2
  noun-cluster                0        0         0        0
  compound-tense              0        0         0        0
                            ───      ───       ───      ───
-                            78      228        57      208
+                            78      224        57      204
 ```
 
-`unknown-word` is the whole of the change. The other movement is the glossary splitting into
-`names` and `verbs`: `default`, `error` and `target` are declared as Technical Names, and their
-verb readings are no longer muted along with them.
+`unknown-word` is the whole of the change. The rest moves for two reasons: the glossary splits
+into `names` and `verbs`, so `default`, `error` and `target` are Technical Names and their verb
+readings are no longer muted along with them; and the new gerund rule in the cascade takes three
+`ing-verb` findings and one `unapproved-word`.
 
 The starter glossary now buys back only 20 of 228 findings, because its 23 words were chosen
 against the *blacklist* — they are words openSTE already had rows for. A glossary written against
@@ -33,11 +34,13 @@ Measured over `ste_checker/tests/corpus.truth` — 155 hand-labelled spans acros
 files, under `corpus.glossary.nix`:
 
 ```
- precision 0.949 (149/157)      recall 0.961 (149/155)
+ precision 0.961 (149/155)      recall 0.961 (149/155)
 ```
 
-The eight false positives are all tagger artifacts (`Flag`, `Default` and `Error` read as verbs,
-`use` in `macros use inline`, `manual fixing`, `Example config:`). The six misses are two
+The six false positives are all tagger artifacts (`Flag`, `Default` and `Error` read as verbs,
+`use` in `macros use inline`, `manual` in `manual fixing`, `Example config:`) — the eight of the
+first labelling pass, less the two the gerund rule took, which is the whole reason that rule
+shipped alone. The six misses are two
 hyphenated-compound halves the immunize rule silences, two 3rd-person forms whose base the
 lemmatizer cannot reach (`syncs`), and two passives with an adverb between the auxiliary and the
 participle. Both numbers are printed by the test and asserted against a floor of 0.90, not a
@@ -83,8 +86,6 @@ What shipped, in `src/tags.rs`:
 
 Still open, each deferred for want of a second instance:
 
-- `manual fixing` — NOUN→ADJ before a gerund. It is the only rule that would fight the noun-run
-  rule, and there is one occurrence.
 - `Example config:` — the imperative rule on a colon-terminated fragment with no finite verb.
 - `macros use inline` — the noun-run rule on a plural subject followed by its own verb. Agreement
   is what LT's `grammar.xml` unification exists for.
@@ -166,6 +167,14 @@ Three smaller decisions, each visible in a test:
 crate's own. It is now `docs/glossary.nix`, extended with the vocabulary of grammar (`noun`,
 `verb`, `wordlist`, `contraction`) that the standard's 900 words have no reason to carry and this
 program cannot describe itself without.
+
+**The one measured precision item.** A cascade rule for `-ing` tagged VERB after NOUN/ADJ/PROPN,
+which the standard permits inside a Technical Name. It takes `LLM-based filtering`, `channel
+watching` and `poll/info forwarding` — the three clear `ing-verb` false positives — and with them
+`manual fixing`, which item 0 deferred as a NOUN→ADJ rule for want of a second instance. A gerund
+after a noun is the same construction in both, so that is the resolution rather than collateral.
+It shipped alone, after the labelling, so its effect on the number is attributable: precision
+0.949 → 0.961.
 
 **Blast radius.** 17 repos consume `readme_fw`, which runs this crate with no flags on every dev
 shell entry. Each sees roughly three times the findings until it has a `docs/glossary.nix`.

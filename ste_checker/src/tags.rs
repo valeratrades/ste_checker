@@ -95,6 +95,12 @@ impl Tags {
 		{
 			return Some(NOUN);
 		}
+		// STE permits an -ing word inside a Technical Name, and a gerund after a noun is one
+		// (`channel watching`, `poll forwarding`). A progressive verb has an auxiliary in front of
+		// it, so the left-hand test is also the governance test.
+		if seen == VERB && meta.is_verb_progressive_form() && matches!(prev, Some(NOUN | ADJ | PROPN)) {
+			return Some(NOUN);
+		}
 		None
 	}
 }

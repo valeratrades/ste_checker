@@ -89,7 +89,7 @@ participles `passive-voice` already owns, and contractions `contraction` already
 half of `won't` is a word openSTE has a row for). The dictionary rules honour it; `prose_words()` does
 not filter on it, because `aux_pairs` is positional and dropping tokens would invent pairs.
 
-Four retagging rules, in order: imperative, subordinator, quantifier, noun run. One
+Five retagging rules, in order: imperative, subordinator, quantifier, noun run, gerund. One
 left-to-right pass, at most one write per token, and a rule may only move a token to a part of
 speech the curated dictionary already admits for it. No fixpoint: two rules that need each
 other's output would be a bug in the pair, not a reason for a loop.

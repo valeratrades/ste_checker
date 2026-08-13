@@ -18,14 +18,14 @@ fn corpus_calibration() {
 	assert_eq!(
 		counts,
 		vec![
-			("unapproved-word", 44),
+			("unapproved-word", 43),
 			("wrong-pos", 16),
 			("unknown-word", 150),
 			("sentence-length", 2),
 			("noun-cluster", 0),
 			("passive-voice", 5),
 			("compound-tense", 0),
-			("ing-verb", 9),
+			("ing-verb", 6),
 			("contraction", 2),
 		]
 	);
@@ -39,14 +39,14 @@ fn glossary_absorbs_technical_vocabulary() {
 	assert_eq!(
 		counts,
 		vec![
-			("unapproved-word", 36),
+			("unapproved-word", 35),
 			("wrong-pos", 7),
 			("unknown-word", 147),
 			("sentence-length", 2),
 			("noun-cluster", 0),
 			("passive-voice", 5),
 			("compound-tense", 0),
-			("ing-verb", 9),
+			("ing-verb", 6),
 			("contraction", 2),
 		]
 	);
@@ -205,6 +205,20 @@ fn reported_offsets_index_bytes() {
 	let word = reported.iter().find(|f| f.rule == "unapproved-word").expect("`work` as a verb is unapproved");
 	assert_eq!(&text[word.start..word.end], "work");
 	assert!(ste_checker::report::human("t.md", text, &findings).is_some());
+}
+
+/// STE allows -ing inside a Technical Name, and a gerund after a noun is one. Silently eating
+/// `ing-verb` hits is what the progressive guard on the noun-run rule exists to prevent, so the
+/// three findings this rule takes off the corpus are named here.
+#[test]
+fn gerund_after_a_noun_is_a_technical_noun() {
+	let ctx = Ctx::new(AppConfig::default(), Glossary::default());
+	for taken in ["Telegram channel watching is enabled.", "The poll info forwarding is on.", "It needs manual fixing."] {
+		assert_eq!(flagged(taken, "ing-verb", &ctx), Vec::<String>::new(), "{taken}");
+	}
+	// A progressive verb has its auxiliary in front of it, so it never matches.
+	assert_eq!(flagged("It is watching the channel.", "ing-verb", &ctx), vec!["watching"]);
+	assert_eq!(flagged("The model is chosen by choosing a tier.", "ing-verb", &ctx), vec!["choosing"]);
 }
 
 /// Both numbers, printed and floored rather than targeted. A change that trades one for the other

@@ -1,6 +1,8 @@
 `ste_checker` reads Markdown. It reports the text that does not agree with ASD-STE100
 (Simplified Technical English).
 
+![showcase](../.assets/showcase.png)
+
 These are the rules that a program can apply: the approved wordlist, the part of speech
 of each word, the length of each sentence, noun clusters, the passive voice, compound
 tenses, -ing forms and contractions.

@@ -10,6 +10,8 @@
 `ste_checker` reads Markdown. It reports the text that does not agree with ASD-STE100
 (Simplified Technical English).
 
+![showcase](./docs/.assets/showcase.png)
+
 These are the rules that a program can apply: the approved wordlist, the part of speech
 of each word, the length of each sentence, noun clusters, the passive voice, compound
 tenses, -ing forms and contractions.
@@ -27,9 +29,19 @@ Thus "Do not work the lever" is a finding, but "The work is done" is not.
 <h2>Installation</h2>
 </summary>
 
+With nix, run it without an installation:
+
 ```sh
 nix run github:valeratrades/ste_checker -- --help
 ```
+
+With [cargo-binstall](https://github.com/cargo-bins/cargo-binstall), get it from the releases:
+
+```sh
+cargo binstall ste_checker
+```
+
+`cargo install ste_checker` also makes it from the source.
 
 </details>
 <!-- markdownlint-restore -->

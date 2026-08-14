@@ -20,9 +20,15 @@ Use `--glossary` for a different file.
 ```
 
 A name is approved as a noun, and a verb is approved as a verb. For the initial file,
-run `ste_checker --suggest-glossary` on your Markdown. It writes each word that is not
-in the approved vocabulary. Remove the words that are usual English, then write a
-description for the words that stay.
+send `--suggest-glossary` to the glossary:
+
+```sh
+ste_checker --suggest-glossary docs/.readme_assets/*.md > docs/glossary.nix
+```
+
+It writes each word that is not in the approved vocabulary, and it does not read the
+file it writes. Remove the words that are usual English, then write a description for
+the words that stay.
 
 Set `text_type` to `description` in the configuration file to permit 25 words in a
 sentence instead of 20. Put rule names in `disable` to switch rules off.

@@ -39,7 +39,7 @@ struct Cli {
 	deny: bool,
 	#[arg(long, value_enum, default_value_t = Format::Human)]
 	format: Format,
-	/// Technical Names and Technical Verbs. Defaults to `docs/glossary.nix` when present.
+	/// Technical Names and Technical Verbs. Defaults to `docs/glossary.nix` when present, except under --suggest-glossary.
 	#[arg(long)]
 	glossary: Option<PathBuf>,
 	/// Print a `docs/glossary.nix` skeleton of every out-of-vocabulary word, instead of checking.

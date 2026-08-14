@@ -131,6 +131,10 @@ inside code in the same input. Deliberately unfiltered: the in-code signal measu
 against a hand-drawn line, which is enough to order a list a human edits and not enough to
 pre-filter one. A machine can propose the list; it cannot draw that line.
 
+The flag does not read the default `docs/glossary.nix`. Its output is normally redirected over
+that path, and the shell truncates the file before the process starts, so discovering it there
+means parsing the empty file the run is about to write. `--glossary` still asks for one by name.
+
 ## 5. Invert the filter — done
 
 `rules/dictionary.rs` is one `verdict()` behind three arms, and the third, `unknown-word`, fires

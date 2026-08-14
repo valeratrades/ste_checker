@@ -17,6 +17,7 @@
     "error"
     "file"
     "flag"
+    { name = "glossary"; desc = "docs/glossary.nix, the Technical Names and Technical Verbs a project declares"; }
     "input"
     "license"
     { name = "markdown"; desc = "the lightweight markup language the checker reads"; }

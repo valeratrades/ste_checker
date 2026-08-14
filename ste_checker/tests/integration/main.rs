@@ -304,6 +304,23 @@ fn suggest_glossary_emits_parseable_nix() {
 	assert_eq!(skeleton.names.get("browser"), Some(&Some(String::new())), "every entry leaves `desc` for the human");
 }
 
+/// `--suggest-glossary > docs/glossary.nix` is the documented bootstrap, and the shell truncates
+/// the file before the process starts: the default glossary must not be read on that path.
+#[test]
+fn suggest_glossary_ignores_the_file_it_writes() {
+	let dir = Path::new(env!("CARGO_TARGET_TMPDIR")).join("redirected");
+	std::fs::create_dir_all(dir.join("docs")).unwrap();
+	std::fs::write(dir.join("docs/glossary.nix"), "").unwrap();
+	std::fs::write(dir.join("in.md"), "Restart the browser.\n").unwrap();
+	let out = std::process::Command::new(env!("CARGO_BIN_EXE_ste_checker"))
+		.current_dir(&dir)
+		.args(["--suggest-glossary", "in.md"])
+		.output()
+		.unwrap();
+	assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
+	assert!(Glossary::parse(std::str::from_utf8(&out.stdout).unwrap()).unwrap().names.contains_key("browser"));
+}
+
 /// A glossary of Technical Names only, for the tests that need one.
 fn names(words: &[&str]) -> Glossary {
 	Glossary {

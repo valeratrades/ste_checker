@@ -74,9 +74,12 @@ fn main() -> Result<()> {
 
 	let glossary = match &cli.glossary {
 		Some(path) => Glossary::read(path)?,
+		// `--suggest-glossary > docs/glossary.nix` is the documented bootstrap, and the shell
+		// truncates the file before this process starts. Reading the file being written is the
+		// one place the default must not apply; `--glossary` still asks for it explicitly.
 		None => {
 			let path = Path::new(DEFAULT_GLOSSARY);
-			match path.exists() {
+			match path.exists() && !cli.suggest_glossary {
 				true => Glossary::read(path)?,
 				false => Glossary::default(),
 			}

@@ -11,6 +11,11 @@ categories = ["command-line-utilities", "text-processing"]
 
 [package.metadata]
 
+# cargo-release defaults to `{crate}-v{version}` for a workspace member, and the release
+# workflow resolves `v[0-9]*` — a mismatch publishes the tarballs under the previous tag.
+[package.metadata.release]
+tag-name = "v{{version}}"
+
 [package.metadata.binstall]
 pkg-url = "{ repo }/releases/download/v{ version }/{ name }-{ target }.tar.gz"
 bin-dir = "{ bin }{ binary-ext }"

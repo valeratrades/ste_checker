@@ -111,13 +111,16 @@ Two things changed shape against the original plan:
 
 `.sh` assets are skipped — shell scripts are not prose. `.typ` waits on item 3.
 
-## 2. LLM target
+## 2. LLM target — shipped as the second half of `skill/`
 
-A second pass invoking the `asd-ste100` skill (`~/.claude/skills/asd-ste100/`, MIT, vendored from
-`danyuchn/asd-ste100-skill`) on files that already passed the procedural rules. The skill ships no
-wordlist and works from STE's principles, so it composes with rather than duplicates the
-dictionary rules. It covers what no checker can do procedurally: one-topic paragraphs, ellipsis,
-list-for-sequences, topic sentences.
+The `asd-ste100` skill (MIT, `danyuchn/asd-ste100-skill`) works from STE's principles and ships no
+wordlist, so it composes with rather than duplicates the dictionary rules. Its rules, references
+and examples are now the `# Rewrite` half of `skill/SKILL.md`, against the `# Check` half that
+documents this binary. It covers what no checker can do procedurally: one-topic paragraphs,
+ellipsis, list-for-sequences, topic sentences.
+
+Nothing invokes it — an agent reads it when a finding points at a sentence, or when asked to
+rewrite. A pass that runs over files which already cleared the procedural rules stays open.
 
 ## 3. `.typ` support
 

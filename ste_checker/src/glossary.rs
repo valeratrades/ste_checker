@@ -40,10 +40,10 @@ impl Glossary {
 		let mut p = Parser { src, i: 0 };
 		let glossary = p.glossary()?;
 		p.space();
-		match p.i == src.len() {
-			true => Ok(glossary),
-			false => bail!("{}: expected end of file", p.at()),
+		if p.i != src.len() {
+			bail!("{}: expected end of file", p.at());
 		}
+		Ok(glossary)
 	}
 }
 
@@ -69,7 +69,9 @@ impl Parser<'_> {
 			let target = match key.as_str() {
 				"names" => &mut glossary.names,
 				"verbs" => &mut glossary.verbs,
-				_ => bail!("{}: `{key}` is not a glossary key; expected `names` or `verbs`", self.at()),
+				_ => {
+					bail!("{}: `{key}` is not a glossary key; expected `names` or `verbs`", self.at());
+				}
 			};
 			target.extend(entries);
 		}
@@ -99,13 +101,15 @@ impl Parser<'_> {
 			match key.as_str() {
 				"name" => name = Some(value.to_lowercase()),
 				"desc" => desc = Some(value),
-				_ => bail!("{}: `{key}` is not an entry field; expected `name` or `desc`", self.at()),
+				_ => {
+					bail!("{}: `{key}` is not an entry field; expected `name` or `desc`", self.at());
+				}
 			}
 		}
-		match name {
-			Some(name) => Ok((name, desc)),
-			None => bail!("{}: entry has no `name`", self.at()),
-		}
+		let Some(name) = name else {
+			bail!("{}: entry has no `name`", self.at());
+		};
+		Ok((name, desc))
 	}
 
 	fn string(&mut self) -> Result<String> {
@@ -118,12 +122,16 @@ impl Parser<'_> {
 					self.i += 1;
 					return Ok(s);
 				}
-				b'\\' => bail!("{}: escape sequences are not supported here", self.at()),
-				b'$' if self.src.as_bytes().get(self.i + 1) == Some(&b'{') => bail!("{}: string interpolation is not supported here", self.at()),
+				b'\\' => {
+					bail!("{}: escape sequences are not supported here", self.at());
+				}
+				b'$' if self.src.as_bytes().get(self.i + 1) == Some(&b'{') => {
+					bail!("{}: string interpolation is not supported here", self.at());
+				}
 				_ => self.i += 1,
 			}
 		}
-		bail!("{}: unterminated string", self.at())
+		bail!("{}: unterminated string", self.at());
 	}
 
 	fn ident(&mut self) -> Result<String> {
@@ -132,17 +140,17 @@ impl Parser<'_> {
 		while self.peek().is_some_and(|c| c.is_ascii_alphanumeric() || c == b'_' || c == b'-') {
 			self.i += 1;
 		}
-		match start == self.i {
-			true => bail!("{}: expected an attribute name", self.at()),
-			false => Ok(self.src[start..self.i].to_string()),
+		if start == self.i {
+			bail!("{}: expected an attribute name", self.at());
 		}
+		Ok(self.src[start..self.i].to_string())
 	}
 
 	fn expect(&mut self, c: u8) -> Result<()> {
-		match self.eat(c) {
-			true => Ok(()),
-			false => bail!("{}: expected `{}`", self.at(), c as char),
+		if self.eat(c) {
+			return Ok(());
 		}
+		bail!("{}: expected `{}`", self.at(), c as char);
 	}
 
 	fn eat(&mut self, c: u8) -> bool {

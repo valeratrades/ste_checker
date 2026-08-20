@@ -76,7 +76,7 @@ Some rules flag patterns that are genuinely hard to auto-fix and need human judg
 (e.g. `ignored-error` flags every `unwrap_or*` / `let _ = …` — each must be individually decided
 "keep & justify vs switch to Error/Panic"). `audit` scaffolds that review: it collects every
 occurrence of each audit-capable rule into `<target_dir>/tmp/audit/<rule>.md` (override with
-`--audit-dir`) as a `- [ ]` checklist with a `
+`--audit-dir`) as a `- [ ]` checklist with a `TODO: reason` line per item, under a header that
 spells out the default decision. It's a collection step, not a gate — it always exits 0 on success.
 
 Only a subset of rules know how to audit (currently just `ignored-error`), and audit is normally

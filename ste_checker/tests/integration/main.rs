@@ -17,15 +17,15 @@ fn corpus_calibration() {
 	assert_eq!(
 		counts,
 		vec![
-			("unapproved-word", 43),
-			("wrong-pos", 16),
-			("unknown-word", 150),
-			("sentence-length", 2),
-			("noun-cluster", 0),
-			("passive-voice", 5),
-			("compound-tense", 0),
-			("ing-verb", 6),
-			("contraction", 2),
+			("unapproved-word", 381),
+			("wrong-pos", 113),
+			("unknown-word", 1157),
+			("sentence-length", 74),
+			("noun-cluster", 3),
+			("passive-voice", 40),
+			("compound-tense", 3),
+			("ing-verb", 58),
+			("contraction", 10),
 		]
 	);
 }
@@ -38,15 +38,15 @@ fn glossary_absorbs_technical_vocabulary() {
 	assert_eq!(
 		counts,
 		vec![
-			("unapproved-word", 35),
-			("wrong-pos", 7),
-			("unknown-word", 147),
-			("sentence-length", 2),
-			("noun-cluster", 0),
-			("passive-voice", 5),
-			("compound-tense", 0),
-			("ing-verb", 6),
-			("contraction", 2),
+			("unapproved-word", 370),
+			("wrong-pos", 90),
+			("unknown-word", 979),
+			("sentence-length", 74),
+			("noun-cluster", 3),
+			("passive-voice", 40),
+			("compound-tense", 3),
+			("ing-verb", 58),
+			("contraction", 10),
 		]
 	);
 }
@@ -355,7 +355,7 @@ fn corpus_paths() -> Vec<std::path::PathBuf> {
 fn corpus_counts(glossary: Glossary) -> Vec<(&'static str, usize)> {
 	let ctx = Ctx::new(AppConfig::default(), glossary);
 	let paths = corpus_paths();
-	assert_eq!(paths.len(), 13, "corpus changed size; recalibrate before touching these numbers");
+	assert_eq!(paths.len(), 15, "corpus changed size; recalibrate before touching these numbers");
 
 	let mut counts: Vec<(&'static str, usize)> = ste_checker::rule_names().map(|r| (r, 0)).collect();
 	for path in paths {

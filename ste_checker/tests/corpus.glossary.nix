@@ -6,33 +6,58 @@
 # uses both ways is declared twice.
 {
   names = [
+    "adapter"
+    "book"
     "build"
     "channel"
     { name = "check"; desc = "one run of a lint rule over one file"; }
     "config"
+    "cpi"
+    "daemon"
     "default"
+    "enrollment"
     "error"
     "false"
+    "fee"
     "file"
     "flag"
     "function"
+    "gate"
+    "gdp"
+    "governance"
     "implementation"
+    "index"
+    "inflation"
     "input"
+    "latency"
+    { name = "leg"; desc = "one side of a two-venue trade"; }
+    "literacy"
+    "loopback"
+    "maker"
     "output"
+    "percentile"
+    "quote"
     "release"
+    "snapshot"
     "target"
+    "threshold"
     "true"
+    { name = "venue"; desc = "an exchange the runtime holds a connection to"; }
   ];
 
   verbs = [
+    "boot"
     "build"
     "check"
     "copy"
     "delete"
     "enable"
+    "gate"
     "generate"
     "restart"
     "start"
     "switch"
+    { name = "tick"; desc = "advance the clock by one quote"; }
+    "validate"
   ];
 }

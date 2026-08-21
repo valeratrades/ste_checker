@@ -1,9 +1,8 @@
 //! The single integration binary, per <https://matklad.github.io/2021/02/27/delete-cargo-integration-tests.html>.
 //!
-//! `tests/corpus/` is every `usage*.md` and `installation*.md` under `~/s/*/docs/.readme_assets/`
-//! at the time of writing — the text this checker was calibrated against. The counts below are a
-//! snapshot, not a target: any change to the wordset, the POS-equivalence table or a rule moves
-//! them, and that movement is the regression signal.
+//! `tests/corpus/` is the text this checker was calibrated against; see its README. The counts
+//! below are a snapshot, not a target: any change to the wordset, the POS-equivalence table or a
+//! rule moves them, and that movement is the regression signal.
 use std::{collections::HashSet, path::Path};
 
 use ste_checker::{Ctx, config::AppConfig, glossary::Glossary};
@@ -295,7 +294,7 @@ fn glossary_nix_round_trips() {
 fn suggest_glossary_emits_parseable_nix() {
 	let out = std::process::Command::new(env!("CARGO_BIN_EXE_ste_checker"))
 		.arg("--suggest-glossary")
-		.args(std::fs::read_dir(CORPUS).unwrap().map(|e| e.unwrap().path()))
+		.args(corpus_paths())
 		.output()
 		.unwrap();
 	assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
@@ -347,11 +346,16 @@ fn flagged(text: &str, rule: &str, ctx: &Ctx) -> Vec<String> {
 		.collect()
 }
 
+fn corpus_paths() -> Vec<std::path::PathBuf> {
+	let mut paths: Vec<_> = std::fs::read_dir(CORPUS).unwrap().map(|e| e.unwrap().path()).filter(|p| p.file_name() != Some("README.md".as_ref())).collect();
+	paths.sort();
+	paths
+}
+
 fn corpus_counts(glossary: Glossary) -> Vec<(&'static str, usize)> {
 	let ctx = Ctx::new(AppConfig::default(), glossary);
-	let mut paths: Vec<_> = std::fs::read_dir(CORPUS).unwrap().map(|e| e.unwrap().path()).collect();
-	paths.sort();
-	assert_eq!(paths.len(), 29, "corpus changed size; recalibrate before touching these numbers");
+	let paths = corpus_paths();
+	assert_eq!(paths.len(), 13, "corpus changed size; recalibrate before touching these numbers");
 
 	let mut counts: Vec<(&'static str, usize)> = ste_checker::rule_names().map(|r| (r, 0)).collect();
 	for path in paths {

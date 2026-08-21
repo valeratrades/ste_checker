@@ -1,6 +1,6 @@
 # Roadmap
 
-Baseline over `ste_checker/tests/corpus/` (29 README assets, 680 tagged words), before and after
+Baseline over `ste_checker/tests/corpus/`, before and after
 item 5 — the inversion of the dictionary filter from a blacklist to the whitelist the standard
 actually specifies:
 
@@ -30,8 +30,7 @@ against the *blacklist* — they are words openSTE already had rows for. A gloss
 the whitelist is the ~90 entries `--suggest-glossary` proposes, and writing that list is the
 consumer's job, not this repo's.
 
-Measured over `ste_checker/tests/corpus.truth` — 155 hand-labelled spans across six of the 29
-files, under `corpus.glossary.nix`:
+Measured over `ste_checker/tests/corpus.truth`, under `corpus.glossary.nix`:
 
 ```
  precision 0.961 (149/155)      recall 0.961 (149/155)

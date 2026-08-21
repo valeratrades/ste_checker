@@ -105,6 +105,19 @@ Section titles are not sentences, and in the README case `readme_fw` generates t
 `noun_cluster` counts maximal runs of NOUN over `Tags`, not `iter_nominal_phrases`: the chunker's
 `np_member` is a second tagger output, broken by the same errors and not rewritten by the cascade.
 
+### `tests/fuzz/`
+A deterministic metamorphic fuzzer on `v_utils::fuzz` — the same FRNG/minimizer/corpus kernel
+`trading_data` and `dockviewers_core` sit on, so a harness here is a table of targets
+(`main.rs`), the generators they draw from (`draw.rs`) and one `CORPUS.txt` of minimized repros.
+
+There is no oracle for *is this finding right*: that judgement lives in the corpus counts and the
+precision/recall floor of `tests/integration/`. What a fuzzer can decide is everything claimed
+**around** a finding, so every target is either an invariance or a structural claim — spans index
+the source in both units, one text reads the same way twice, a fenced document is silent, the
+glossary and `--text-type` only ever subtract, a suggested skeleton parses and absorbs what it was
+written from, and a glossary file round-trips while a damaged one is rejected rather than
+half-read. `FUZZ_SEED` / `FUZZ_SIZE` / `FUZZ_TARGET` / `FUZZ_RUNS` replay and widen.
+
 ### `report.rs`
 Harper spans are **char** indices into the original source; miette and editors want
 **bytes**. One `ByteOffsets` table per file converts them, with an assertion that the result

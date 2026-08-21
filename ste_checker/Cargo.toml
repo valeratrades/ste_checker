@@ -30,5 +30,11 @@ miette.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 
+# The FRNG/minimizer/corpus kernel the fuzz binary is a target table over — the same one
+# `trading_data` and `dockviewers_core` sit on. Dev-only, and `default-features = false` because the
+# fuzz feature is the whole of what is wanted here.
+[dev-dependencies]
+v_utils = { workspace = true, features = ["fuzz"] }
+
 [lints]
 workspace = true

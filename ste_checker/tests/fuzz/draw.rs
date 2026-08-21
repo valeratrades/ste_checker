@@ -14,7 +14,10 @@ use v_utils::fuzz::Frng;
 const APPROVED: &[&str] = &[
 	"remove", "install", "the", "file", "do", "not", "work", "lever", "system", "start", "unit", "make", "value", "test", "a", "and", "to",
 ];
-const UNKNOWN: &[&str] = &["browser", "socket", "kubernetes", "repo", "cache", "daemon", "webhook", "quicker", "requires"];
+/// Out-of-vocabulary in every content part of speech, adverbs included: the glossary has a list for
+/// a noun and a list for a verb and none for anything else, so a pool of nouns would leave the arm
+/// that decides where a suggested word goes untested.
+const UNKNOWN: &[&str] = &["browser", "socket", "kubernetes", "repo", "cache", "daemon", "webhook", "quicker", "requires", "asynchronously", "natively", "programmatically"];
 const AUXILIARY: &[&str] = &["is", "are", "was", "were", "have", "has", "had", "been", "never"];
 const PARTICIPLE: &[&str] = &["specified", "configured", "chosen", "written", "found", "enabled"];
 const PROGRESSIVE: &[&str] = &["watching", "running", "forwarding", "choosing", "monitoring"];

@@ -21,8 +21,10 @@ unused_features = "allow"
 [workspace.dependencies]
 clap = { version = "^4.5.4", features = ["derive"] }
 color-eyre = "^0.6.5"
-harper-brill = "^2.7.0"
-harper-core = "^2.7.0"
+# exact: the corpus counts in tests/integration are a snapshot of this dictionary and tagger,
+# and CI runs `cargo update` — a floating minor moves them out from under the calibration.
+harper-brill = "=2.8.0"
+harper-core = "=2.8.0"
 miette = { version = "^7.6.0", features = ["fancy", "serde", "syntect-highlighter"] }
 serde = { version = "^1.0.229", features = ["derive"] }
 serde_json = "^1.0.151"

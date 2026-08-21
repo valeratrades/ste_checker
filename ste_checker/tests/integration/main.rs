@@ -19,7 +19,7 @@ fn corpus_calibration() {
 		vec![
 			("unapproved-word", 381),
 			("wrong-pos", 113),
-			("unknown-word", 1157),
+			("unknown-word", 1156),
 			("sentence-length", 74),
 			("noun-cluster", 3),
 			("passive-voice", 40),
@@ -40,7 +40,7 @@ fn glossary_absorbs_technical_vocabulary() {
 		vec![
 			("unapproved-word", 370),
 			("wrong-pos", 90),
-			("unknown-word", 979),
+			("unknown-word", 978),
 			("sentence-length", 74),
 			("noun-cluster", 3),
 			("passive-voice", 40),

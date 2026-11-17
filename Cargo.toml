@@ -24,7 +24,7 @@ non_kebab_case_bins = "allow"
 [workspace.dependencies]
 clap = { version = "^4.5.4", features = ["derive"] }
 color-eyre = "^0.6.5"
-# exact: the corpus counts in tests/integration are a snapshot of this dictionary and tagger,
+# exact: the corpus counts in tests/it/integration.rs are a snapshot of this dictionary and tagger,
 # and CI runs `cargo update` — a floating minor moves them out from under the calibration.
 harper-brill = "=2.8.0"
 harper-core = "=2.8.0"

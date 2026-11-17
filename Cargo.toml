@@ -14,8 +14,11 @@ doc_lazy_continuation = "allow"
 get_first = "allow"
 get_last_with_len = "allow"
 manual_is_multiple_of = "allow"
+if_not_else = "warn"
+integer_division = "warn"
 
 [workspace.lints.rust]
+stable_features = "allow"
 unused_features = "allow"
 
 [workspace.lints.cargo]
@@ -32,3 +35,6 @@ miette = { version = "^7.6.0", features = ["fancy", "serde", "syntect-highlighte
 serde = { version = "^1.0.229", features = ["derive"] }
 serde_json = "^1.0.151"
 v_utils = { version = "^2.17.8", default-features = false }
+
+[workspace.package]
+repository = "https://github.com/valeratrades/ste_checker"

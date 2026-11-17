@@ -9,7 +9,7 @@
 //! The FRNG, the minimizer, the corpus format and the scan/record/replay loop are
 //! [`v_utils::fuzz`] — shared with `trading_data` and `dockviewers_core`. What is local is the table
 //! below and the generators in `draw.rs`. Env-var replay:
-//! `FUZZ_SEED=… FUZZ_SIZE=… FUZZ_TARGET=… cargo t -p ste_checker --test fuzz -- --nocapture`
+//! `FUZZ_SEED=… FUZZ_SIZE=… FUZZ_TARGET=… cargo t -p ste_checker --test it fuzz:: -- --nocapture`
 //! verbose-replays one case.
 
 /// An oracle violation, as the value a target returns rather than a panic — a panic is reserved for
@@ -22,7 +22,7 @@ macro_rules! check {
 	};
 }
 
-mod draw;
+pub(crate) mod draw;
 mod nix;
 mod text;
 
@@ -68,7 +68,7 @@ const TARGETS: &[Target] = &[
 
 const SUITE: Suite = Suite {
 	targets: TARGETS,
-	corpus: concat!(env!("CARGO_MANIFEST_DIR"), "/tests/fuzz/CORPUS.txt"),
+	corpus: concat!(env!("CARGO_MANIFEST_DIR"), "/tests/it/fuzz/CORPUS.txt"),
 };
 
 #[test]
